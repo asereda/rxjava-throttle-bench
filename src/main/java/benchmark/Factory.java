@@ -12,6 +12,13 @@ public enum Factory {
         }
     },
 
+    RXJAVA_FLATMAP {
+        @Override
+        <T, K> Throttler<T> create(Duration duration, Function<T, K> keySelector) {
+            return RxJava.flatMap(duration, keySelector);
+        }
+    },
+
     RXJAVA_OPERATOR {
         @Override
         <T, K> Throttler<T> create(Duration duration, Function<T, K> keySelector) {

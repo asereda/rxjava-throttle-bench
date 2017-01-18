@@ -7,7 +7,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-@State(Scope.Thread)
+@State(Scope.Benchmark)
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -16,6 +16,7 @@ public class ThrottleBenchmark {
 
     @Param({
        "EXECUTOR",
+       "RXJAVA_FLATMAP",
        "RXJAVA_OPERATOR"
     })
     private Factory factory;
@@ -41,10 +42,10 @@ public class ThrottleBenchmark {
     private Throttler<Long> throttler;
 
 
-    /**
-     * Current index
-     */
-    private long index;
+    @State(Scope.Thread)
+    public static class ThreadState {
+        private long index;
+    }
 
 
     @Setup
@@ -61,8 +62,9 @@ public class ThrottleBenchmark {
     }
 
     @Benchmark
-    public void consume() {
-        throttler.accept(index++);
+    @Threads(4)
+    public void consume(ThreadState state) {
+        throttler.accept(state.index++);
     }
 
 

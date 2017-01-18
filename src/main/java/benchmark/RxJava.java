@@ -20,11 +20,19 @@ import java.util.function.Function;
 
 class RxJava {
 
+    static <K, T> Throttler<T> flatMap(Duration duration, Function<? super T, ? extends K> keySelector) {
+        final Subject<T,T> subject = PublishSubject.<T>create().toSerialized();
+
+        Function<Observable<T>, Observable<T>> func = observer -> observer.groupBy(keySelector::apply)
+                .flatMap(obs -> obs.throttleLast(duration.toNanos(), TimeUnit.NANOSECONDS));
+
+        return new RxJavaThrottler<K, T>(subject, subject.compose(func::apply));
+    }
 
     /**
      *  Uses rxjava operator
      */
-    public static <K, T> Throttler<T> operator(Duration duration, Function<? super T, ? extends K> keySelector) {
+    static <K, T> Throttler<T> operator(Duration duration, Function<? super T, ? extends K> keySelector) {
         final Subject<T,T> subject = PublishSubject.<T>create().toSerialized();
 
         Observable<T> observable = subject.lift(new ThrottleOperator<K, T>(duration, keySelector, Schedulers.computation()));
